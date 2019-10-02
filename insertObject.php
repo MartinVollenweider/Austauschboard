@@ -15,7 +15,7 @@
 		$result = create_content($x, $y, $w, $h, $rot);
 		if ($result){
 			$response  = "<div contenteditable id='id_".$letzteID."' class='draggable' style='top:".$y."px; left:".$x."px; transform:rotate(0deg)'>";
-			$response .= "Hier Text";
+			$response .= "Hier Text, bitte ersetzen";
 			$response .= "</div>";
 			echo $response;
 		}
