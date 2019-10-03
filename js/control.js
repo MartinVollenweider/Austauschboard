@@ -1,36 +1,58 @@
-// Wenn das Dokument geladen wurde, führe initFunc() aus
+// Wenn das Dokument geladen wurde, führe showFunc() aus
 document.addEventListener('DOMContentLoaded', showFunc);
-//  Benötigt um herauszufinden, ob man nach Doppelclick auf Bildschirm
-// klieckt
+/*  Benötigt um herauszufinden, ob man nach Doppelclick auf Bildschirm
+    klickt um die Handlers wieder zu zeigen */
 var doppelclick = false;
 
-/**
- * Lade und zeige alle Bilder
- */
+// Lade und zeige alle Objekte
 function showFunc() {
+  // Klick auf Dokument zum Erstellen von Objekten
+  // Doppelklick auf Text zum Editieren
   document.addEventListener('click', clickDocumentFunc);
   document.addEventListener('dblclick', doubleClickFunc);
 
   var url = 'showObject.php';
   var request = new Request(url);
 
-  /* Fetch: Per AJAX alle Objekte vom Server laden */
-  /* Ergnis von Server ist in data */
+  // Fetch: Per AJAX alle Objekte vom Server laden
+  // Ergnis von Server ist in data
   fetch(request)
   .then(response => response.text())
   .then(data => {
     console.log(data);
     document.querySelector('#show').innerHTML = data;
-    makeDraggable();
+    makeDraggableFunc();
   })
   .catch(error => {
       console.log('Request failed', error);
-  });/*- Ende fetch */
+  }) // Ende fetch
+} // Ende showFunc
 
-  // Neues Bild via Form einfügen:
-  // Wenn das Formular abgesendet wird, führe insertFunc() aus
-  //document.querySelector('#formFooter').addEventListener('submit',insertFunc);
-}; /* Ende initFunc */
+/*  Auf Bildschirm geklickt. Inhalt einfügen. 2 Möglichkeiten:
+    a) man klickt, um Inhalt einzufügen
+    b) Man klickt nach Edit-Doppelklick */
+function clickDocumentFunc(ereignis) {
+  console.log(ereignis.target.nodeName)
+  if (ereignis.target.nodeName=="DIV") {
+    // nichts tun
+  } else {
+    console.log("Click auf Bildschirm");
+
+    // Wenn vorher Doppelklick gemacht wurde
+    if (doppelclick == true) {
+      /*  Bei Kombination Doppelclick-Click DB aktualisieren, weil man mit Doppelklick
+          bestehenden Inhalt geändert hat. currentElement kommt von onDrop,
+          welches auch auf Mausclick reagiert */
+      updateFunc(currentElement);
+      doppelclick = false;
+      makeDraggableFunc();
+    } else {
+      // Klick auf Bildschirm für neues Element einzufügen
+      // Position übermitteln
+      insertFunc(ereignis);
+    }
+  }
+} // Ende clickDocumentFunc
 
 // Doppelclick
 function doubleClickFunc(ereignis) {
@@ -41,43 +63,14 @@ function doubleClickFunc(ereignis) {
         item.disable();
       })
     } catch(err) {
-      // … und gebe eine Meldung aus, wenn es keine gibt
-      console.log("no Draggable objects");
+      // nicht tun
     }
+    // Weil Doppelclick gemacht wurde: Variable auf true setzen
     doppelclick = true;
   }
-}
+} // Ende doubleClickFunc
 
-// Auf Bildschirm geklickt. Inhalt einfügen
-// 2 Möglichkeiten: a) man klickt, um Inhalt einzufügen
-// b) Man klickt nach Edit-Doppelklick
-function clickDocumentFunc(ereignis) {
-  console.log(ereignis.target.nodeName)
-  if (ereignis.target.nodeName=="DIV") {
-    // nichts tun
-  } else {
-    console.log("Click");
-
-    // Wenn vorher Doppelklick gemacht wurde
-    if (doppelclick==true) {
-      // Bei Kombination Doppelclick-Click DB aktualisieren, weil man mit Doppelklick
-      // bestehenden Inhalt geändert hat. currentElement kommt von onDrop,
-      // welches auch auf Mausclick reagiert.
-      //console.log(currentElement);
-      updateFunc(currentElement);
-      doppelclick = false;
-      makeDraggable();
-    } else {
-      // Klick auf Bildschirm für neues Element einzufügen
-      // Position übermitteln
-      insertFunc(ereignis);
-    }
-  }
-}
-
-/**
- * Ein neues Objekt einfügen
- */
+// Ein neues Objekt einfügen
 function insertFunc(ereignis) {
   var x = event.clientX;
   var y = event.clientY;
@@ -87,66 +80,58 @@ function insertFunc(ereignis) {
   currentContent += "&y=";
   currentContent += y;
 
+  // In DB speichern
+  var url = 'insertObject.php' + currentContent;
+  var request = new Request(url, {
+    method: 'GET',
+  });
 
-// In DB speichern
-var url = 'insertObject.php' + currentContent;
-var request = new Request(url, {
-  method: 'GET',
-});
-
-  /* Fetch: Sende das neue Bild per AJAX an den Server */
+  // Fetch: Sende das neue Objekt per AJAX an den Server
 fetch(request)
   .then(response => response.text())
   .then(data => {
-    // Erhalte als Antwort alle Objekte
-    // und ersetze das aktuelle HTML mit dem neuen vom Server
+    /*  Erhalte als Antwort alle Objekte
+        und ersetze das aktuelle HTML mit dem neuen vom Server */
     console.log(data);
     var el = document.createElement('div');
     el.innerHTML = data;
     console.log(data)
     document.querySelector('#show').appendChild(el.firstChild);
-    makeDraggable();
+    makeDraggableFunc();
     doppelclick = false;
   })
   .catch(error => {
     console.log('Request failed', error);
-  });/* Ende fetch */
-};  /* Ende insertFunc */
+  }) // Ende fetch
+}  // Ende insertFunc
 
-/**
- * Objekte draggable machen
- */
-function makeDraggable() {
-  // Probiere alle Draggables zu deaktiveren…
-  // weil sonst «Geister»-Elemnte ohne Inhalt, nur mit Anfassern zurückbleiben
+// Objekte draggable machen
+function makeDraggableFunc() {
+  /*  Probiere alle Draggables zu deaktiveren…
+      weil sonst «Geister»-Elemnte ohne Inhalt, nur mit Anfassern zurückbleiben */
   try {
     Draggables.forEach(item => {
       item.disable();
     })
   } catch(err) {
-    // … und gebe eine Meldung aus, wenn es keine gibt
-    console.log("no Draggable objects");
+    // nichts tun
   }
 
   // Mache alle Objekte draggable
-  Draggables = Subjx('.draggable').drag(DragMethods);
-};
+  Draggables = subjx('.draggable').drag(DragMethods);
+} // Ende makeDraggableFunc
 
-/**
- * Eine Sammlung von Funktionen, die aufgerufen wird, wenn etwas mit den draggable Objekten gemacht wird.
- */
+// Eine Sammlung von Funktionen, die aufgerufen wird, wenn etwas mit den draggable Objekten gemacht wird
 var DragMethods = {
-  /**
-   * Wenn ein Objekt losgelassen wird:
-   * Sende die Daten an die Datenbank
-   */
+  /* Wenn ein Objekt losgelassen wird:
+    Sende die Daten an die Datenbank  */
   onDrop(ereignis, element) {
     // Funktion updateFunc aufgerufen
     updateFunc(element);
     // wird in function clickDocumentFunc verwendet
     currentElement = element;
-  } /* Ende onDrop */
-}; /* Ende methods */
+  } // Ende onDrop
+} // Ende methods
 
 function updateFunc(element) {
   console.log("UpdateFunc")
@@ -185,11 +170,11 @@ function updateFunc(element) {
   //console.log(url);
   var request = new Request(url, {
       method: 'GET'
-  });
+  })
 
-  /* Fetch: URL per AJAX aufrufen, um Daten in DB zu speichern */
+  // Fetch: URL per AJAX aufrufen, um Daten in DB zu speichern
   fetch(request)
     .catch(error => {
         console.log('Request failed', error);
-    });/*- Ende fetch */
+    }) //- Ende fetch
 }
