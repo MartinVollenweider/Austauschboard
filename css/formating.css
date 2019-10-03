@@ -1,0 +1,11 @@
+body {
+  margin:0;
+}
+
+.draggable {
+  position: absolute;
+  width: 150px;
+  height: 10%;
+  overflow: hidden;
+ }
+ .draggable img {width: 100%;}
