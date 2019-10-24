@@ -17,13 +17,15 @@ function showFunc() {
   // Fetch: Per AJAX alle Objekte vom Server laden
   // Ergnis von Server ist in data
   fetch(request)
-  .then(response => response.text())
-  .then(data => {
+  .then(function(response) {
+        return response.text();
+    })
+  .then(function(data) {
     console.log(data);
     document.querySelector('#show').innerHTML = data;
     makeDraggableFunc();
   })
-  .catch(error => {
+  .catch(function(error) {
       console.log('Request failed', error);
   }) // Ende fetch
 } // Ende showFunc
@@ -88,8 +90,10 @@ function insertFunc(ereignis) {
 
   // Fetch: Sende das neue Objekt per AJAX an den Server
 fetch(request)
-  .then(response => response.text())
-  .then(data => {
+  .then(function(response) {
+    return response.text()
+  })
+  .then(function(data) {
     /*  Erhalte als Antwort alle Objekte
         und ersetze das aktuelle HTML mit dem neuen vom Server */
     console.log(data);
@@ -100,7 +104,7 @@ fetch(request)
     makeDraggableFunc();
     doppelclick = false;
   })
-  .catch(error => {
+  .catch(function(error) {
     console.log('Request failed', error);
   }) // Ende fetch
 }  // Ende insertFunc
@@ -174,7 +178,7 @@ function updateFunc(element) {
 
   // Fetch: URL per AJAX aufrufen, um Daten in DB zu speichern
   fetch(request)
-    .catch(error => {
+    .catch(function(error) {
         console.log('Request failed', error);
     }) //- Ende fetch
 }
